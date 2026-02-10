@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa - Geo API</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/map.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>📍 Buscar un lugar en el mapa</h2>
+        <a href="/" class="btn-back">← Volver al inicio</a>
+      </div>
+
+      <form method="POST" class="search-form">
+        <input
+          type="text"
+          name="lugar"
+          placeholder="Ej. Paris, Mexico, Tokyo..."
+          required
+          class="search-input"
+        />
+        <button type="submit" class="btn-search">Buscar</button>
+      </form>
+
+      {% if error %}
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        Lugar no encontrado. Intenta con otro nombre.
+      </div>
+      {% endif %}
+
+      {% if lat and lon %}
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+      
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <script>
+        var map = L.map('map').setView([{{ lat }}, {{ lon }}], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([{{ lat }}, {{ lon }}])
+            .addTo(map)
+            .bindPopup("{{ nombre }}")
+            .openPopup();
+      </script>
+      {% endif %}
+    </div>
+  </body>
+</html>
