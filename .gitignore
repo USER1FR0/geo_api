@@ -1,2 +1,17 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
 
+# entorno virtual
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+
+# python cache
+__pycache__/
+*.pyc
+
+# vscode
+.vscode/
+
+# git
+.git/
