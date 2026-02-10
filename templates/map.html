@@ -1,11 +1,14 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mapa - Geo API</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/static/css/map.css">
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link rel="stylesheet" href="/static/css/map.css" />
   </head>
   <body>
     <div class="container">
@@ -14,30 +17,44 @@
         <a href="/" class="btn-back">← Volver al inicio</a>
       </div>
 
-      <form method="POST" class="search-form">
+      <form method="POST" action="/buscar" class="search-form" id="searchForm">
         <input
           type="text"
           name="lugar"
+          id="lugarInput"
           placeholder="Ej. Paris, Mexico, Tokyo..."
-          required
           class="search-input"
         />
+        <input type="hidden" name="lat_actual" id="latActual">
+        <input type="hidden" name="lon_actual" id="lonActual">
         <button type="submit" class="btn-search">Buscar</button>
+        <button type="button" class="btn-search" onclick="obtenerUbicacion()">📍 Mi ubicación</button>
       </form>
 
       {% if error %}
-      <div class="alert alert-error">
-        <span class="alert-icon">⚠️</span>
-        Lugar no encontrado. Intenta con otro nombre.
+      <div class="alert alert-error">Lugar no encontrado</div>
+      {% endif %} 
+      
+      {% if lat and lon %}
+      
+      <!-- Botón para buscar gasolineras -->
+      {% if not gasolineras %}
+      <div style="margin: 20px 0;">
+        <form method="POST" action="/gasolineras">
+          <input type="hidden" name="lat" value="{{ lat }}">
+          <input type="hidden" name="lon" value="{{ lon }}">
+          <input type="hidden" name="nombre" value="{{ nombre }}">
+          <button type="submit" class="btn-search">⛽ Buscar gasolineras cercanas</button>
+        </form>
       </div>
       {% endif %}
 
-      {% if lat and lon %}
       <div class="map-container">
         <div id="map"></div>
       </div>
-      
+
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
       <script>
         var map = L.map('map').setView([{{ lat }}, {{ lon }}], 13);
 
@@ -45,12 +62,42 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
+        // marcador principal
         L.marker([{{ lat }}, {{ lon }}])
-            .addTo(map)
-            .bindPopup("{{ nombre }}")
-            .openPopup();
+          .addTo(map)
+          .bindPopup("{{ nombre|safe }}")
+          .openPopup();
+
+        {% if gasolineras %}
+        // gasolineras
+        var gasolineras = {{ gasolineras|tojson }};
+
+        gasolineras.forEach(function(g) {
+            L.marker([g.lat, g.lon])
+              .addTo(map)
+              .bindPopup(g.nombre);
+        });
+        {% endif %}
       </script>
+
       {% endif %}
+
+      <script>
+        function obtenerUbicacion() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+              document.getElementById('latActual').value = position.coords.latitude;
+              document.getElementById('lonActual').value = position.coords.longitude;
+              document.getElementById('lugarInput').value = '';
+              document.getElementById('searchForm').submit();
+            }, function(error) {
+              alert('No se pudo obtener tu ubicación. Asegúrate de dar permisos.');
+            });
+          } else {
+            alert('Tu navegador no soporta geolocalización.');
+          }
+        }
+      </script>
     </div>
   </body>
 </html>
